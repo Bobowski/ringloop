@@ -1,0 +1,14 @@
+/venv-3.14t/bin/python | micro_server --read buffered | median of 7x3s | 4 CPUs
+ work pipe thr  loop                   req/s  µs/req  cores  capacity  scale  errors
+    0    1   1  ringloop              369556    1.88   0.67    531735  1.00x  0
+    0    1   1  ringloop@epoll        309477    2.35   0.71    425138  1.00x  0
+    0    1   1  uvloop                222513    3.24   0.72    309046  1.00x  0
+    0    1   1  rloop                 273535    2.67   0.73    374705  1.00x  0
+    0    1   1  asyncio               217688    3.32   0.72    301628  1.00x  0
+
+    0    1   2  ringloop              509607    2.51   1.28    796261  1.50x  0
+    0    1   2  ringloop@epoll        479118    2.85   1.37    701106  1.65x  0
+    0    1   2  uvloop                437796    3.39   1.48    589624  1.91x  0
+    0    1   2  rloop                 465108    3.01   1.41    663560  1.77x  0
+    0    1   2  asyncio               394735    3.82   1.52    523136  1.73x  0
+

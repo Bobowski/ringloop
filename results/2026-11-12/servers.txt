@@ -1,0 +1,22 @@
+bench/servers.py --rounds 9      (1.0.0b1; uvicorn 0.54.0 with httptools 0.9.0, granian 2.8.8,
+                                  uvloop 0.23.0, rloop 0.5.0, CPython 3.14.10; same VM as the other files)
+
+hello-world ASGI app, 128 connections, median of 9x3s
+server                          req/s  CPU µs/req  cores  p99 ms  errors
+uvicorn + ringloop              92094         9.9   0.90    3.58  0
+uvicorn + ringloop/epoll        82882        10.9   0.91    3.84  0
+uvicorn + uvloop                49492        16.3   0.81    5.12  0
+uvicorn + asyncio               46475        18.0   0.84    5.38  0
+granian + rloop                195062         7.9   1.54    2.05  0
+granian + uvloop               186869         7.9   1.46    2.05  0
+granian + asyncio              106965        11.9   1.26    3.20  0
+granian + ringloop             185210         7.8   1.45    2.18  0
+
+Under uvicorn the loop is the lever: on ringloop it serves 1.9 times the
+requests it serves on uvloop, for 0.6 of the CPU per request.
+
+Granian parses HTTP and does the socket I/O in Rust threads; one worker uses
+about 1.5 cores and serves twice what uvicorn serves on ringloop, for about
+0.8 of the CPU per request. The event loop only carries its callbacks:
+ringloop, rloop and uvloop are level there, and all three are well ahead
+of asyncio's loop.

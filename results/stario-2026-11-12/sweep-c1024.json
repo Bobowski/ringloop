@@ -1,0 +1,308 @@
+[
+ {
+  "case": "plaintext",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 52820,
+    "p50_us": 15872,
+    "p90_us": 18432,
+    "p99_us": 20480,
+    "p999_us": 1376256,
+    "max_us": 4898943,
+    "requests": 211290,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 6.247633472169633,
+    "sys_us": 12.343809163195758,
+    "instructions": 0.0
+   },
+   {
+    "rps": 68669,
+    "p50_us": 14336,
+    "p90_us": 20480,
+    "p99_us": 23552,
+    "p999_us": 25600,
+    "max_us": 1455498,
+    "requests": 274682,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 5.475542093229842,
+    "sys_us": 8.854068065648255,
+    "instructions": 0.0
+   },
+   {
+    "rps": 71717,
+    "p50_us": 14336,
+    "p90_us": 18432,
+    "p99_us": 24576,
+    "p999_us": 29696,
+    "max_us": 1670403,
+    "requests": 286875,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 4.796631203201471,
+    "sys_us": 8.92396502921204,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 116313,
+    "p50_us": 8192,
+    "p90_us": 10752,
+    "p99_us": 15360,
+    "p999_us": 15872,
+    "max_us": 20586,
+    "requests": 465267,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.943033022963899,
+    "sys_us": 6.499703386551805,
+    "instructions": 0.0
+   },
+   {
+    "rps": 139744,
+    "p50_us": 6912,
+    "p90_us": 9216,
+    "p99_us": 11776,
+    "p999_us": 22528,
+    "max_us": 25459,
+    "requests": 558990,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.488435997252118,
+    "sys_us": 5.524387451339593,
+    "instructions": 0.0
+   },
+   {
+    "rps": 156657,
+    "p50_us": 6144,
+    "p90_us": 7936,
+    "p99_us": 12288,
+    "p999_us": 16384,
+    "max_us": 21269,
+    "requests": 626650,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.2766745182149537,
+    "sys_us": 4.915196895127571,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 168114,
+    "p50_us": 5376,
+    "p90_us": 7936,
+    "p99_us": 12288,
+    "p999_us": 17408,
+    "max_us": 20871,
+    "requests": 672472,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.8915735750740568,
+    "sys_us": 3.9140107308136147,
+    "instructions": 0.0
+   },
+   {
+    "rps": 149015,
+    "p50_us": 6400,
+    "p90_us": 8192,
+    "p99_us": 9216,
+    "p999_us": 12800,
+    "max_us": 15852,
+    "requests": 596073,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 2.1608562896352717,
+    "sys_us": 4.429084320370433,
+    "instructions": 0.0
+   },
+   {
+    "rps": 172156,
+    "p50_us": 5888,
+    "p90_us": 6912,
+    "p99_us": 9216,
+    "p999_us": 10752,
+    "max_us": 12008,
+    "requests": 688640,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.8587792467297108,
+    "sys_us": 3.8221148260879665,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 8328,
+    "p50_us": 110592,
+    "p90_us": 126976,
+    "p99_us": 163840,
+    "p999_us": 163840,
+    "max_us": 4788838,
+    "requests": 33311,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 101.82516810758884,
+    "sys_us": 16.330451488952967,
+    "instructions": 0.0
+   },
+   {
+    "rps": 8629,
+    "p50_us": 94208,
+    "p90_us": 102400,
+    "p99_us": 126976,
+    "p999_us": 1441792,
+    "max_us": 4916927,
+    "requests": 34519,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 95.95549889906131,
+    "sys_us": 18.3103488237339,
+    "instructions": 0.0
+   },
+   {
+    "rps": 8609,
+    "p50_us": 73728,
+    "p90_us": 77824,
+    "p99_us": 86016,
+    "p999_us": 2097152,
+    "max_us": 4847243,
+    "requests": 34435,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 96.17841793471949,
+    "sys_us": 17.42362643744918,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 10640,
+    "p50_us": 94208,
+    "p90_us": 98304,
+    "p99_us": 102400,
+    "p999_us": 102400,
+    "max_us": 104532,
+    "requests": 42562,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 84.77443609022556,
+    "sys_us": 7.330827067669183,
+    "instructions": 0.0
+   },
+   {
+    "rps": 9990,
+    "p50_us": 98304,
+    "p90_us": 114688,
+    "p99_us": 147456,
+    "p999_us": 155648,
+    "max_us": 159960,
+    "requests": 39962,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 90.29029029029029,
+    "sys_us": 7.007007007006999,
+    "instructions": 0.0
+   },
+   {
+    "rps": 10220,
+    "p50_us": 94208,
+    "p90_us": 110592,
+    "p99_us": 155648,
+    "p999_us": 155648,
+    "max_us": 162084,
+    "requests": 40881,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 87.86692759295497,
+    "sys_us": 7.632093933463808,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 10048,
+    "p50_us": 98304,
+    "p90_us": 106496,
+    "p99_us": 155648,
+    "p999_us": 155648,
+    "max_us": 162125,
+    "requests": 40192,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 89.5700636942675,
+    "sys_us": 8.359872611464967,
+    "instructions": 0.0
+   },
+   {
+    "rps": 9792,
+    "p50_us": 102400,
+    "p90_us": 106496,
+    "p99_us": 139264,
+    "p999_us": 139264,
+    "max_us": 143705,
+    "requests": 39168,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 91.70751633986926,
+    "sys_us": 8.782679738562084,
+    "instructions": 0.0
+   },
+   {
+    "rps": 9984,
+    "p50_us": 98304,
+    "p90_us": 110592,
+    "p99_us": 131072,
+    "p999_us": 131072,
+    "max_us": 139301,
+    "requests": 39936,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 90.34455128205127,
+    "sys_us": 7.411858974358994,
+    "instructions": 0.0
+   }
+  ]
+ }
+]

@@ -1,0 +1,190 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # "t": the free-threaded builds. The extension must keep the GIL off.
+        python: ["3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+      # Every test runs on both backends; the io_uring half skips itself
+      # where the runner's kernel or seccomp policy does not allow io_uring.
+      # -W error::RuntimeWarning: on a free-threaded build, an import that
+      # turns the GIL back on fails the run instead of warning.
+      - name: Test
+        run: |
+          uname -r
+          python -m pytest -q -rs -W error::RuntimeWarning
+
+  # Another kernel: the 22.04 runners have Ubuntu's 6.8 for Azure (the
+  # 24.04 runners have 7.0). `python -m ringloop` prints what the runner
+  # allows; io_uring must be available, so that its half of the suite runs.
+  kernels:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+      - name: What this runner allows
+        run: |
+          python -m ringloop
+          python -c "import ringloop; assert ringloop.new_event_loop().backend == 'uring'"
+      - name: Test
+        run: python -m pytest -q -rs -W error::RuntimeWarning
+
+  # io_uring on older kernels. virtme-ng boots a vanilla kernel (the latest
+  # of each long-term series, from Ubuntu's mainline builds) in a virtual
+  # machine on the runner's own file system, and the suite runs inside.
+  old-kernels:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        kernel: ["v6.1.192", "v6.6.162", "v6.12.117"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends qemu-system-x86 qemu-utils virtiofsd busybox-static
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+          python -m pip install virtme-ng
+      - name: Let the runner's user use KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # The last line of the script is the proof that every step before it
+      # passed: the exit status of the machine is not relied on.
+      - name: Test on ${{ matrix.kernel }}
+        run: |
+          cat > in-vm.sh <<EOF
+          set -ex
+          uname -r
+          $(which python) -m ringloop
+          $(which python) -c "import ringloop; assert ringloop.new_event_loop().backend == 'uring'"
+          $(which python) -m pytest -q -rs -p no:cacheprovider -W error::RuntimeWarning
+          echo suite-passed-in-vm
+          EOF
+          vng -r ${{ matrix.kernel }} --cpus 2 --memory 3G -- sh "$PWD/in-vm.sh" 2>&1 | tee vm.log
+          grep -q '^suite-passed-in-vm' vm.log
+
+  # Systems without the engine: the package installs (from source, no
+  # extension) and hands out asyncio's loop.
+  fallback:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        python: ["3.12", "3.14"]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install .
+      - run: python tests/fallback_check.py
+      - run: python -m ringloop
+
+  abi:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: cc -fsyntax-only -Isrc/ringloop tests/abi_check.c
+
+  # Misbehaving clients for a while, then: no transport, no descriptor, no
+  # growing memory left behind (tests/soak).
+  soak:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Soak
+        run: sh tests/soak/run.sh 60 python
+
+  # CPython's own asyncio test suite on ringloop (see conformance/).
+  conformance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14", "3.15"]
+        backend: [uring, epoll]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: CPython test suite of the running version
+        run: |
+          version=$(python -c "import platform; print(platform.python_version())")
+          git clone --quiet --depth 1 --branch "v$version" --filter=blob:none --sparse \
+            https://github.com/python/cpython ../cpython
+          git -C ../cpython sparse-checkout set Lib/test
+      - name: Conformance
+        env:
+          RINGLOOP_BACKEND: ${{ matrix.backend }}
+        run: python conformance/run_cpython.py --lib ../cpython/Lib
+
+  # Memory errors in the C and Cython code: AddressSanitizer and UBSan.
+  sanitizers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Build with sanitizers
+        env:
+          CFLAGS: -fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g
+          LDFLAGS: -fsanitize=address,undefined
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . --group test
+      - name: Test
+        run: |
+          LD_PRELOAD=$(gcc -print-file-name=libasan.so) ASAN_OPTIONS=detect_leaks=0 \
+          PYTHONMALLOC=malloc python -m pytest -q -p no:cacheprovider \
+            tests/test_loop.py tests/test_robustness.py tests/test_asyncio_compat.py

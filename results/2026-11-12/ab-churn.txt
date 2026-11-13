@@ -1,0 +1,4 @@
+micro_server, one request per connection, median of 7x3s (server CPU µs per connection, lower is better)
+backend  base conn/s new conn/s  base µs  new µs   change
+uring          14356      14424    20.67   21.03    +1.8%
+epoll          19921      19094    21.42   22.00    +2.7%

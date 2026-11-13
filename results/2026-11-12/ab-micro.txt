@@ -1,0 +1,10 @@
+micro_server under loadgen, median of 5x3s (req/s higher, CPU µs/req lower)
+read:write      backend     c pipe  base req/s  new req/s   change  base µs  new µs   change  base instr  new instr   change
+buffered:one    uring     128    1      366265     427422   +16.7%     1.82    1.57   -13.7%           0          0      n/a
+buffered:one    epoll     128    1      393448     378249    -3.9%     1.87    1.93    +3.3%           0          0      n/a
+buffered:one    uring     128   16     3777396    3748144    -0.8%     0.20    0.20    +1.7%           0          0      n/a
+buffered:one    epoll     128   16     3849491    3808977    -1.1%     0.20    0.20    -0.9%           0          0      n/a
+plain:one       uring     128    1      434832     431308    -0.8%     1.52    1.55    +2.3%           0          0      n/a
+plain:one       epoll     128    1      391338     382003    -2.4%     1.83    1.86    +1.7%           0          0      n/a
+plain:one       uring     128   16     3779531    3714078    -1.7%     0.19    0.20    +1.9%           0          0      n/a
+plain:one       epoll     128   16     3712238    3996547    +7.7%     0.20    0.19    -5.2%           0          0      n/a

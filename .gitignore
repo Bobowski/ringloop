@@ -1,0 +1,11 @@
+.venv/
+build/
+*.so
+*.egg-info/
+__pycache__/
+.pytest_cache/
+src/ringloop/_core.c
+bench/loadgen
+floor/floor_epoll
+floor/floor_uring
+.deps/

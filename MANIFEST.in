@@ -1,0 +1,7 @@
+# The extension is built from the .pyx with Cython; the generated C is not shipped.
+include src/ringloop/*.pyx src/ringloop/*.h
+exclude src/ringloop/_core.c
+include DESIGN.md
+include CHANGELOG.md
+recursive-include tests *.py *.c *.sh
+recursive-include conformance *.py *.txt

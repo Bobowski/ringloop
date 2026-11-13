@@ -1,0 +1,9 @@
+
+c=16 pipeline=1 3x4s, server cpu 3, client cpus 1,2
+case       loop                                  req/s vs first  p50 ms  p99 ms  user µs  sys µs    instr  err
+plaintext  uvloop                                69656    1.00x    0.22    0.47     4.51    9.79        0    0
+plaintext  ringloop@RINGLOOP_BACKEND=uring     108328    1.56x    0.14    0.25     1.55    7.62        0    0
+plaintext  ringloop@RINGLOOP_BACKEND=epoll     112505    1.62x    0.13    0.32     1.75    7.18        0    0
+page       uvloop                                 8819    1.00x    1.73    3.33    99.15   15.14        0    0
+page       ringloop@RINGLOOP_BACKEND=uring      10459    1.19x    1.41    3.07    88.34    6.50        0    0
+page       ringloop@RINGLOOP_BACKEND=epoll      10280    1.17x    1.47    3.46    87.66    9.02        0    0

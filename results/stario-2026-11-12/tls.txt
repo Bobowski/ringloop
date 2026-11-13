@@ -1,0 +1,4 @@
+loop                                  req/s   server CPU µs/req
+uvloop                                39785               15.11
+ringloop@RINGLOOP_BACKEND=uring     116777                8.43
+ringloop@RINGLOOP_BACKEND=epoll     115848                8.52

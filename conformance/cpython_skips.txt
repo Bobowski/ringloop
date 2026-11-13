@@ -1,0 +1,41 @@
+# Tests of CPython's asyncio suite that do not apply to ringloop.
+# pattern: reason        (fnmatch against module.Class.test_name)
+# [3.12,3.13] pattern: reason      (those CPython versions only)
+# [3.14+] pattern: reason          (3.14 and newer)
+
+# -- asyncio's handle lock ----------------------------------------------------
+# asyncio's private _ThreadSafeHandle holds a lock while its callback runs, so
+# cancel() and cancelled() called from another thread wait for the callback.
+# A ringloop handle never blocks the caller: cancel() from another thread
+# takes effect if the callback has not started.
+[3.14+] test_events.*.test_call_soon_threadsafe_handle_block_cancellation: cancel() does not wait for a running callback
+[3.14+] test_events.*.test_call_soon_threadsafe_handle_block_check_cancelled: cancelled() does not wait for a running callback
+[3.14+] test_events.*.test_call_soon_threadsafe_handle_cancel_same_thread: asserts the handle is asyncio's private _ThreadSafeHandle
+[3.14+] test_events.*.test_call_soon_threadsafe_handle_cancel_other_thread: asserts the handle is asyncio's private _ThreadSafeHandle
+
+# -- one loop, not three --------------------------------------------------------
+# The suite runs the same tests on asyncio's loop with three selectors. The
+# selector argument means nothing here: the EPollEventLoopTests copy runs.
+test_*.PollEventLoopTests.*: same tests as EPollEventLoopTests
+test_*.SelectEventLoopTests.*: same tests as EPollEventLoopTests
+
+# -- asyncio internals ----------------------------------------------------------
+# These tests reach into private parts of asyncio's own loop and transport
+# classes, or replace them with mocks. Another loop has no such parts.
+test_events.*.test_create_server_multiple_hosts_ipv4: mocks asyncio.base_events.socket
+test_events.*.test_create_server_multiple_hosts_ipv6: mocks asyncio.base_events.socket
+test_events.*.test_prompt_cancellation: calls the private loop._stop_serving()
+test_events.*.test_timeout_rounding: counts calls of the private loop._run_once()
+test_sslproto.SslProtoHandshakeTests.*: unit tests of asyncio.sslproto.SSLProtocol with a mocked loop
+[3.14+] test_sslproto.*.test_create_connection_ssl_failed_certificate_no_cycles: patches asyncio.sslproto.SSLProtocol
+[3.14+] test_subprocess.*.test_watcher_implementation: reads the private loop._watcher
+[3.14+] test_subprocess.*.test_pid_not_reaped_before_exit_published: patches the private loop._watcher
+test_ssl.TestSSL.test_flush_before_shutdown: drives the private transport._ssl_protocol
+test_ssl.TestSSL.test_remote_shutdown_receives_trailing_data: calls the private transport._test__append_write_backlog()
+test_ssl.TestSSL.test_remote_shutdown_receives_trailing_data_on_slow_socket: calls the private transport._test__append_write_backlog()
+
+# -- one CPython version, not all -----------------------------------------------
+[3.12] test_server.TestServer2.test_wait_closed_basic: calls the private Server._attach() without a transport
+[3.12] test_server.TestServer2.test_wait_closed_race: calls the private Server._attach() without a transport
+[3.12,3.13] test_subprocess.GenericWatcherTests.*: child watchers of asyncio's policy; ringloop waits with pidfd
+[3.15] test_server_context.AsyncioEventLoopSSLTests.test_gh140947: reads the private transport._ssl_protocol

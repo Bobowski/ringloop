@@ -1,0 +1,308 @@
+[
+ {
+  "case": "plaintext",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 26206,
+    "p50_us": 26,
+    "p90_us": 29,
+    "p99_us": 51,
+    "p999_us": 123,
+    "max_us": 3883,
+    "requests": 104826,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 6.79233763260322,
+    "sys_us": 15.492635274364648,
+    "instructions": 0.0
+   },
+   {
+    "rps": 27433,
+    "p50_us": 25,
+    "p90_us": 29,
+    "p99_us": 48,
+    "p999_us": 102,
+    "max_us": 2170,
+    "requests": 109736,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 7.436299347501185,
+    "sys_us": 14.362264426056212,
+    "instructions": 0.0
+   },
+   {
+    "rps": 24841,
+    "p50_us": 27,
+    "p90_us": 32,
+    "p99_us": 64,
+    "p999_us": 163,
+    "max_us": 1973,
+    "requests": 99367,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 7.729157441326838,
+    "sys_us": 15.619338996014656,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 26535,
+    "p50_us": 26,
+    "p90_us": 31,
+    "p99_us": 53,
+    "p999_us": 126,
+    "max_us": 4875,
+    "requests": 106143,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 6.331260599208592,
+    "sys_us": 14.169964198228755,
+    "instructions": 0.0
+   },
+   {
+    "rps": 28120,
+    "p50_us": 23,
+    "p90_us": 29,
+    "p99_us": 50,
+    "p999_us": 150,
+    "max_us": 4097,
+    "requests": 112482,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 5.903271692745377,
+    "sys_us": 13.229018492176388,
+    "instructions": 0.0
+   },
+   {
+    "rps": 26191,
+    "p50_us": 25,
+    "p90_us": 31,
+    "p99_us": 52,
+    "p999_us": 149,
+    "max_us": 4907,
+    "requests": 104766,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 6.261692947959223,
+    "sys_us": 13.974265969226071,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 29148,
+    "p50_us": 23,
+    "p90_us": 27,
+    "p99_us": 46,
+    "p999_us": 115,
+    "max_us": 4268,
+    "requests": 116594,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 5.6264580760258,
+    "sys_us": 12.762453684643887,
+    "instructions": 0.0
+   },
+   {
+    "rps": 25302,
+    "p50_us": 26,
+    "p90_us": 32,
+    "p99_us": 58,
+    "p999_us": 123,
+    "max_us": 2984,
+    "requests": 101210,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 5.691249703580746,
+    "sys_us": 15.097620741443365,
+    "instructions": 0.0
+   },
+   {
+    "rps": 27032,
+    "p50_us": 24,
+    "p90_us": 30,
+    "p99_us": 54,
+    "p999_us": 139,
+    "max_us": 14654,
+    "requests": 108131,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 6.43681562592483,
+    "sys_us": 13.391535957383843,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 7898,
+    "p50_us": 111,
+    "p90_us": 141,
+    "p99_us": 228,
+    "p999_us": 457,
+    "max_us": 19648,
+    "requests": 31593,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 103.57052418333755,
+    "sys_us": 14.940491263611037,
+    "instructions": 0.0
+   },
+   {
+    "rps": 7819,
+    "p50_us": 112,
+    "p90_us": 137,
+    "p99_us": 202,
+    "p999_us": 278,
+    "max_us": 2320,
+    "requests": 31279,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 98.98964061900499,
+    "sys_us": 20.974549175086338,
+    "instructions": 0.0
+   },
+   {
+    "rps": 8183,
+    "p50_us": 109,
+    "p90_us": 128,
+    "p99_us": 185,
+    "p999_us": 332,
+    "max_us": 3441,
+    "requests": 32732,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 97.76365636074789,
+    "sys_us": 17.35304900403275,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 7260,
+    "p50_us": 120,
+    "p90_us": 140,
+    "p99_us": 216,
+    "p999_us": 357,
+    "max_us": 1405,
+    "requests": 29041,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 97.5206611570248,
+    "sys_us": 18.45730027548209,
+    "instructions": 0.0
+   },
+   {
+    "rps": 7395,
+    "p50_us": 117,
+    "p90_us": 142,
+    "p99_us": 202,
+    "p999_us": 405,
+    "max_us": 3248,
+    "requests": 29583,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 100.33806626098715,
+    "sys_us": 14.063556457065573,
+    "instructions": 0.0
+   },
+   {
+    "rps": 7375,
+    "p50_us": 117,
+    "p90_us": 145,
+    "p99_us": 202,
+    "p999_us": 355,
+    "max_us": 3688,
+    "requests": 29500,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 97.08474576271186,
+    "sys_us": 17.627118644067806,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 6777,
+    "p50_us": 120,
+    "p90_us": 173,
+    "p99_us": 256,
+    "p999_us": 851,
+    "max_us": 3936,
+    "requests": 27108,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 110.07820569573556,
+    "sys_us": 13.870444149328604,
+    "instructions": 0.0
+   },
+   {
+    "rps": 6855,
+    "p50_us": 122,
+    "p90_us": 160,
+    "p99_us": 250,
+    "p999_us": 437,
+    "max_us": 3677,
+    "requests": 27421,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 104.15754923413566,
+    "sys_us": 18.088986141502556,
+    "instructions": 0.0
+   },
+   {
+    "rps": 7251,
+    "p50_us": 117,
+    "p90_us": 151,
+    "p99_us": 220,
+    "p999_us": 566,
+    "max_us": 11021,
+    "requests": 29004,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 102.33071300510277,
+    "sys_us": 14.067025237898216,
+    "instructions": 0.0
+   }
+  ]
+ }
+]

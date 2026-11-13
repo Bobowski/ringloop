@@ -1,0 +1,80 @@
+[project]
+name = "ringloop"
+dynamic = ["version"]
+description = "A drop-in asyncio event loop for Linux on io_uring, with an epoll backend."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Adam Bobowski", email = "adam@bobowski.dev" }
+]
+requires-python = ">=3.12"
+keywords = ["asyncio", "event loop", "io_uring", "epoll", "networking", "free-threading"]
+dependencies = []
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Free Threading :: 2 - Beta",
+    "Topic :: System :: Networking",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/Bobowski/ringloop"
+Issues = "https://github.com/Bobowski/ringloop/issues"
+Changelog = "https://github.com/Bobowski/ringloop/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+# `uv sync --group test`, or `pip install --group test` (pip 25.1+).
+# The framework packages are optional: tests/test_frameworks.py skips what is missing.
+test = [
+    "pytest>=8",
+    "pytest-asyncio>=1.0",
+    "pytest-timeout>=2",
+    "uvicorn",
+    "starlette",
+    "fastapi",
+    "httpx",
+    "aiohttp",
+]
+
+[build-system]
+requires = ["setuptools>=77", "Cython>=3.1,<4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "ringloop.__version__" }
+
+[tool.setuptools.package-data]
+ringloop = ["py.typed"]
+
+# The Cython and C sources go into the sdist (MANIFEST.in), not into wheels.
+[tool.setuptools.exclude-package-data]
+ringloop = ["*.pyx", "*.h", "*.c"]
+
+# Wheels: `cibuildwheel` (.github/workflows/wheels.yml). The engine is
+# Linux-only; other systems install from the sdist, which builds no extension.
+# The build images have old kernel headers and old kernels: the extension
+# carries the io_uring ABI itself (ll_abi.h) and picks the backend at run time.
+[tool.cibuildwheel]
+skip = "*_i686"
+# The build containers do not allow io_uring, so this checks that the wheel
+# imports and serves on epoll. The tests workflow covers the rest.
+test-command = "python {project}/conformance/smoke.py"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 60

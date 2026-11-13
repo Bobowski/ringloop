@@ -1,0 +1,308 @@
+[
+ {
+  "case": "plaintext",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 68914,
+    "p50_us": 223,
+    "p90_us": 308,
+    "p99_us": 496,
+    "p999_us": 1664,
+    "max_us": 5481,
+    "requests": 275665,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 5.7462924804829205,
+    "sys_us": 8.590417041530024,
+    "instructions": 0.0
+   },
+   {
+    "rps": 69656,
+    "p50_us": 218,
+    "p90_us": 286,
+    "p99_us": 465,
+    "p999_us": 581,
+    "max_us": 2257,
+    "requests": 278633,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 4.507867233260594,
+    "sys_us": 9.790972780521418,
+    "instructions": 0.0
+   },
+   {
+    "rps": 71392,
+    "p50_us": 213,
+    "p90_us": 276,
+    "p99_us": 458,
+    "p999_us": 584,
+    "max_us": 5238,
+    "requests": 285575,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 4.174137158225011,
+    "sys_us": 9.80502017032721,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 108328,
+    "p50_us": 142,
+    "p90_us": 200,
+    "p99_us": 248,
+    "p999_us": 539,
+    "max_us": 3429,
+    "requests": 433324,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.550845580090097,
+    "sys_us": 7.624990768776309,
+    "instructions": 0.0
+   },
+   {
+    "rps": 124656,
+    "p50_us": 120,
+    "p90_us": 170,
+    "p99_us": 223,
+    "p999_us": 439,
+    "max_us": 10695,
+    "requests": 498635,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.3637530483891669,
+    "sys_us": 6.578102939288924,
+    "instructions": 0.0
+   },
+   {
+    "rps": 105190,
+    "p50_us": 144,
+    "p90_us": 202,
+    "p99_us": 266,
+    "p999_us": 799,
+    "max_us": 6308,
+    "requests": 420772,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.5780967772601957,
+    "sys_us": 7.814431029565547,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "plaintext",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 109157,
+    "p50_us": 132,
+    "p90_us": 205,
+    "p99_us": 327,
+    "p999_us": 446,
+    "max_us": 9020,
+    "requests": 436641,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.9055122438322782,
+    "sys_us": 7.255604313053676,
+    "instructions": 0.0
+   },
+   {
+    "rps": 112505,
+    "p50_us": 126,
+    "p90_us": 207,
+    "p99_us": 320,
+    "p999_us": 511,
+    "max_us": 4319,
+    "requests": 450032,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.65325985511755,
+    "sys_us": 7.181903026532153,
+    "instructions": 0.0
+   },
+   {
+    "rps": 125742,
+    "p50_us": 114,
+    "p90_us": 186,
+    "p99_us": 290,
+    "p999_us": 528,
+    "max_us": 3816,
+    "requests": 502985,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 130,
+    "user_us": 1.7496142895770705,
+    "sys_us": 6.139555597970447,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "uvloop",
+  "runs": [
+   {
+    "rps": 8819,
+    "p50_us": 1728,
+    "p90_us": 1856,
+    "p99_us": 3200,
+    "p999_us": 5120,
+    "max_us": 6587,
+    "requests": 35277,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 100.0113391540991,
+    "sys_us": 12.473069509014604,
+    "instructions": 0.0
+   },
+   {
+    "rps": 8593,
+    "p50_us": 1728,
+    "p90_us": 2304,
+    "p99_us": 3328,
+    "p999_us": 4608,
+    "max_us": 6723,
+    "requests": 34374,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 99.15047131386012,
+    "sys_us": 16.757826137553838,
+    "instructions": 0.0
+   },
+   {
+    "rps": 8852,
+    "p50_us": 1664,
+    "p90_us": 1984,
+    "p99_us": 3328,
+    "p999_us": 4864,
+    "max_us": 8501,
+    "requests": 35411,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 97.15318572074109,
+    "sys_us": 15.137821961138725,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=uring",
+  "runs": [
+   {
+    "rps": 10633,
+    "p50_us": 1408,
+    "p90_us": 2048,
+    "p99_us": 2944,
+    "p999_us": 4096,
+    "max_us": 8241,
+    "requests": 42535,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 87.27546318066398,
+    "sys_us": 6.018997460735451,
+    "instructions": 0.0
+   },
+   {
+    "rps": 10459,
+    "p50_us": 1408,
+    "p90_us": 2048,
+    "p99_us": 3072,
+    "p999_us": 4096,
+    "max_us": 6143,
+    "requests": 41839,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 88.34496605794052,
+    "sys_us": 6.501577588679604,
+    "instructions": 0.0
+   },
+   {
+    "rps": 10441,
+    "p50_us": 1472,
+    "p90_us": 2048,
+    "p99_us": 3072,
+    "p999_us": 4096,
+    "max_us": 6560,
+    "requests": 41766,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 88.49727037640075,
+    "sys_us": 6.704338664878836,
+    "instructions": 0.0
+   }
+  ]
+ },
+ {
+  "case": "page",
+  "loop": "ringloop@RINGLOOP_BACKEND=epoll",
+  "runs": [
+   {
+    "rps": 10328,
+    "p50_us": 1472,
+    "p90_us": 2176,
+    "p99_us": 3200,
+    "p999_us": 4608,
+    "max_us": 20086,
+    "requests": 41313,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 87.9163439194423,
+    "sys_us": 7.939581719597213,
+    "instructions": 0.0
+   },
+   {
+    "rps": 10280,
+    "p50_us": 1472,
+    "p90_us": 2048,
+    "p99_us": 3456,
+    "p999_us": 4864,
+    "max_us": 12535,
+    "requests": 41121,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 86.77042801556422,
+    "sys_us": 9.143968871595343,
+    "instructions": 0.0
+   },
+   {
+    "rps": 10198,
+    "p50_us": 1472,
+    "p90_us": 2048,
+    "p99_us": 3456,
+    "p999_us": 4864,
+    "max_us": 6523,
+    "requests": 40795,
+    "errors": 0,
+    "non2xx": 0,
+    "bytes_per_req": 16151,
+    "user_us": 87.66424789174346,
+    "sys_us": 9.021376740537377,
+    "instructions": 0.0
+   }
+  ]
+ }
+]

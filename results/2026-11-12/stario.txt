@@ -1,0 +1,40 @@
+Stario 5.8.2 (the wheel from PyPI) on each loop, 1.0.0b1, CPython 3.14.10 (GIL build), same VM.
+
+Stario's own test suite (tests/ of the 5.8.2 checkout, 1804 tests):
+  asyncio's loop                                    1804 passed, 4 skipped
+  pytest -p ringloop.pytest_plugin, io_uring       1804 passed, 4 skipped
+  pytest -p ringloop.pytest_plugin, epoll          1804 passed, 4 skipped
+  the same on 3.14t (free-threaded), both backends  1803 passed, 5 skipped
+
+bench/run.py --loops uvloop,ringloop,ringloop@RINGLOOP_BACKEND=epoll,rloop,asyncio --cases plaintext,json,page -r 5 -d 3
+(Stario's benchmark application; server on one CPU, load generator on two)
+
+c=128 pipeline=1 5x3s, server cpu 3, client cpus 1,2
+case       loop                                  req/s vs first  p50 ms  p99 ms  user µs  sys µs
+plaintext  uvloop                                91012    1.00x    1.02    5.89     3.65    4.34
+plaintext  ringloop                             136947    1.50x    0.43    6.66     1.51    2.19
+plaintext  ringloop@RINGLOOP_BACKEND=epoll     193485    2.13x    0.43    4.10     1.44    2.42
+plaintext  rloop                                103792    1.14x    0.91    5.89     3.06    4.09
+plaintext  asyncio                               57536    0.63x    1.73    8.19     8.39    5.30
+json       uvloop                                99428    1.00x    1.09    3.84     3.80    3.87
+json       ringloop                             231127    2.32x    0.45    1.98     1.57    1.73
+json       ringloop@RINGLOOP_BACKEND=epoll     201542    2.03x    0.49    2.82     1.92    2.15
+json       rloop                                 99770    1.00x    1.02    5.38     3.48    4.11
+json       asyncio                               69297    0.70x    1.66    6.14     7.18    4.33
+page       uvloop                                 7220    1.00x   15.36   57.34   121.52   10.04
+page       ringloop                               7166    0.99x   14.85   53.25   125.59    5.58
+page       ringloop@RINGLOOP_BACKEND=epoll       7023    0.97x   14.34  122.88   122.81    7.44
+page       rloop                                  6800    0.94x   15.36   65.54   129.04    9.49
+page       asyncio                                5290    0.73x   15.87   69.63   146.50   18.37
+
+Small responses: about half the CPU per request of uvloop (3.3 to 3.9 µs
+against 7.7 to 8.0), on both backends; the req/s column of the plaintext
+rows is noisy in this run. A rendered page is the application's work and
+the loop makes no difference.
+
+For scale, servers.txt has Granian with a hello-world ASGI app at about
+185,000 requests per second on 1.5 cores (7.9 µs per request); Stario on
+ringloop serves its JSON case at 200,000 to 230,000 on one core.
+
+Podman's default seccomp profile (containers-common, podman 5.7) lists no
+io_uring system call: in a default container a loop uses the epoll backend.

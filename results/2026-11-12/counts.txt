@@ -1,0 +1,53 @@
+What a loop does per request, counted (not timed). Stario 5.8.2, its
+benchmark application, GET /json, CPython 3.14.10 (GIL build), ringloop
+1.0.0, uvloop 0.23.0, rloop 0.5.0. Counts do not depend on how busy or how
+fast the machine is.
+
+1. Entries into the kernel per request, at full speed
+
+   A preloaded library counted the calls; 128 keep-alive connections,
+   bench/loadgen on two CPUs, 5 seconds.
+
+   loop               wait   read  write  io_uring_enter  total   requests per loop iteration
+   uvloop             0.009  1.00  1.00   -               2.01    110 to 117
+   rloop              0.009  2.00  1.00   -               3.01    114 to 118
+   ringloop, epoll    0.011  1.00  1.00   -               2.01     87 to 91
+   ringloop, uring    -      -     -      0.026           0.03     38
+
+   With one connection (strace): uvloop, asyncio and ringloop on epoll make
+   3 calls per request (wait, read, write), rloop 4, ringloop on io_uring 2
+   (the second io_uring_enter returns with the completion of the send).
+
+2. User-space instructions per request
+
+   valgrind --tool=callgrind, instrumentation switched on after a warm-up;
+   a client sends one request on each of 32 connections, reads the 32
+   responses, 150 times. By shared object:
+
+                        uvloop    rloop    ringloop    ringloop   asyncio
+                                           epoll       uring
+   the loop's library     2891      995      1365        1621         -
+   libc                   1769     1211       724         698      1611
+   libpython             11829    12613     10185       10045     58474
+   _asyncio (tasks)        856      856       867         867       885
+   Stario (2 libraries)   5115     5218      5259        5259      5246
+   ujson                   914      914       914         914       914
+   other                   505      514       415         422      1858
+   total                 23879    22321     19729       19826     68988
+
+   The application's part is the same on every loop (within 3 %). ringloop needs 17 %
+   fewer instructions per request than uvloop and 11 % fewer than rloop.
+   Its own library and libc together do less than half the work of
+   uvloop's (2,100 to 2,300 instructions against 4,660).
+
+3. What the counts do not explain
+
+   The time-based runs in this directory (stario.txt, and again on the day
+   of this file) show about half the CPU time per request of uvloop, for
+   both backends. On the epoll backend the loop makes the same two system
+   calls per request as uvloop and runs 17 % fewer instructions, so the
+   counts account for a difference of about 1.2, not 2. The same VM showed
+   swings of 1.5 to 1.8 between 4-second windows for one unchanged server.
+   The factor in CPU time is therefore a measurement of this VM. It has not
+   been confirmed on a machine with performance counters (bench/run.py
+   prints instructions per request there).
