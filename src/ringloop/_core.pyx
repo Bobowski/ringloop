@@ -66,6 +66,11 @@ cdef extern from "<errno.h>" nogil:
 cdef extern from "Python.h":
     ctypedef struct PyListObject:
         PyObject **ob_item
+    ctypedef struct PyThreadState:
+        pass
+    PyThreadState *PyThreadState_Get()
+    # New reference, or NULL when the thread runs no Python code (no error set).
+    PyObject *PyThreadState_GetFrame(PyThreadState *tstate)
     int PyContext_Enter(object ctx) except -1
     int PyContext_Exit(object ctx) except -1
     # The same two, on a borrowed pointer (no temporary reference).
@@ -2417,13 +2422,17 @@ def format_callback(callback, args):
 def _extract_stack():
     """The Python stack of the caller, innermost frame last, without source
     lines (they are looked up only if the traceback is printed)."""
-    try:
-        frame = sys._getframe(0)
-    except ValueError:
-        # No Python frame at all: called from a thread that is not running
-        # Python code (call_soon_threadsafe passed to start_new_thread, a C
-        # library's thread). This file is Cython and pushes none of its own.
+    # The innermost Python frame of this thread (this file is Cython and
+    # pushes none of its own). There is none when the call comes from a thread
+    # that runs no Python code (call_soon_threadsafe passed to
+    # start_new_thread, a C library's thread). sys._getframe() cannot be
+    # asked then: it raises ValueError up to 3.14, and on 3.15 it raises
+    # SystemError or crashes the process.
+    cdef PyObject *f = PyThreadState_GetFrame(PyThreadState_Get())
+    if f == NULL:
         return traceback.StackSummary()
+    frame = <object>f
+    Py_DECREF(frame)  # <object> took its own reference
     stack = traceback.StackSummary.extract(
         traceback.walk_stack(frame), limit=10, lookup_lines=False)
     stack.reverse()
