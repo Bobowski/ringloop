@@ -54,7 +54,6 @@ import inspect
 import logging
 import os
 import reprlib
-import sys
 import traceback
 import socket as _socket
 from asyncio.trsock import TransportSocket
@@ -1557,7 +1556,7 @@ cdef _warn_no_ring_memory():
         return
     warned_no_ring_memory = True
     logging.getLogger("ringloop").warning(
-        "io_uring_setup failed with ENOMEM (on many kernels ring memory counts against "
+        "io_uring_setup failed with ENOMEM (on some kernels ring memory counts against "
         "RLIMIT_MEMLOCK unless the process has CAP_IPC_LOCK); this loop uses epoll instead")
 
 
@@ -2045,11 +2044,14 @@ cdef class Core:
         old.cancel()
         if ent[0] is None and ent[1] is None:
             del self.watch[fd]
-        # A watch on a number a transport or listener holds can only be stale
-        # (_watch_add refuses those numbers): the descriptor it was for was
-        # closed under it and the number reused. The registration is the
-        # transport's; leave it alone.
-        if not self.closed and fd not in self.fds:
+        # Under epoll a transport or listener keeps its own registration in
+        # this set, and a watch on a number one of them holds is stale (the
+        # descriptor it was for was closed and the number reused) or was
+        # overwritten when the transport took the socket: the registration is
+        # the transport's, leave it alone. Under io_uring transports have
+        # none here, so the registration is the watch's own and must go
+        # (left behind, a level-triggered event would fire every turn).
+        if not self.closed and (self.uring or fd not in self.fds):
             self._watch_sync(fd, ent[0] is not None, ent[1] is not None, True)
         return True
 
