@@ -160,6 +160,30 @@ def test_sock_recv_on_reused_number_is_registered(backend):
     run(main(), backend)
 
 
+def test_remove_writer_after_a_transport_took_the_socket_lets_the_loop_sleep(backend):
+    """add_writer(), then a transport over the same socket, then remove_writer()
+    (cleanup in a finally): the registration must go, or under io_uring (where
+    the transport has none in the epoll set) "writable" fires every turn and
+    the idle loop spins."""
+    async def main():
+        loop = asyncio.get_running_loop()
+        a, b = socket.socketpair()
+        a.setblocking(False)
+        loop.add_writer(a, lambda: None)
+        tr, _ = await loop.connect_accepted_socket(asyncio.Protocol, a)
+        loop.remove_writer(a)
+        core = loop._core
+        await asyncio.sleep(0.05)
+        before = core.turns
+        await asyncio.sleep(0.3)
+        turns = core.turns - before
+        tr.close()
+        b.close()
+        assert turns < 50, f"{turns} turns in 0.3 s of idling"
+
+    run(main(), backend)
+
+
 # -- TLS shutdown while the peer still sends ---------------------------------------
 
 def test_tls_close_while_peer_still_sends(backend, tls):
@@ -191,7 +215,7 @@ def test_tls_close_while_peer_still_sends(backend, tls):
         result = {}
 
         def client():
-            raw = socket.create_connection((HOST, port))
+            raw = socket.create_connection((HOST, port), timeout=5)
             try:
                 ss = client_ctx.wrap_socket(raw, server_hostname="localhost")
                 ss.sendall(b"hello")
@@ -207,7 +231,7 @@ def test_tls_close_while_peer_still_sends(backend, tls):
             finally:
                 raw.close()
 
-        t = threading.Thread(target=client)
+        t = threading.Thread(target=client, daemon=True)
         t.start()
         exc = await asyncio.wait_for(lost, 10)
         await loop.run_in_executor(None, t.join)

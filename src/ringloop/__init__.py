@@ -18,7 +18,7 @@ from typing import Any, TypeVar
 
 _T = TypeVar("_T")
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 __all__ = ["Loop", "NATIVE", "Server", "__version__", "install", "new_event_loop", "run"]
 

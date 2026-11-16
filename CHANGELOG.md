@@ -6,10 +6,11 @@ The versions follow semantic versioning. The public interface is what
 `python -m ringloop` and `ringloop.pytest_plugin`. Everything else,
 `ringloop._core` included, can change in any release.
 
-## Unreleased
+## 1.0.1
 
 Fixes found by comparing the loop with uvloop, rloop and the io_uring
-runtimes (`tests/test_other_loops.py` holds a test for each):
+runtimes (`tests/test_other_loops.py` tests the first four; the two io_uring
+items below them cannot be triggered in a test):
 
 - epoll backend: output that `resume_writing()` wrote while the turn's flush
   emptied a buffer waited for an unrelated event before it was sent.
@@ -20,9 +21,12 @@ runtimes (`tests/test_other_loops.py` holds a test for each):
   connection that now held the number (epoll backend).
 - TLS: closing while the peer still sends reads that data away before the
   TLS shutdown, as uvloop does, so the peer gets a clean `close_notify`
-  instead of a broken pipe or a reset.
+  instead of a broken pipe or a reset. A peer that never stops sending is
+  read until `ssl_shutdown_timeout` (30 s by default), and the protocol's
+  `connection_lost()` then gets a `TimeoutError`; 1.0.0 dropped the
+  connection at once.
 - Debug mode: `call_soon_threadsafe` from a thread with no Python frame
-  failed.
+  failed (on 3.15 it could crash the process).
 - io_uring: a ring whose kernel dropped completions (out of memory) now
   stops with a clear error instead of a bare `OSError(EBADR)`.
 - io_uring polls carry the right events on big-endian machines (sdist builds
