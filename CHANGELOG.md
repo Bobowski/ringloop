@@ -6,6 +6,31 @@ The versions follow semantic versioning. The public interface is what
 `python -m ringloop` and `ringloop.pytest_plugin`. Everything else,
 `ringloop._core` included, can change in any release.
 
+## Unreleased
+
+Fixes found by comparing the loop with uvloop, rloop and the io_uring
+runtimes (`tests/test_other_loops.py` holds a test for each):
+
+- epoll backend: output that `resume_writing()` wrote while the turn's flush
+  emptied a buffer waited for an unrelated event before it was sent.
+- `add_reader` / `add_writer` (and so `sock_recv`, `sock_sendall`,
+  `sock_connect`) after a descriptor was closed under a pending call and its
+  number reused: a new registration on that number was never made (the call
+  hung, both backends), and cancelling the old call could unregister a
+  connection that now held the number (epoll backend).
+- TLS: closing while the peer still sends reads that data away before the
+  TLS shutdown, as uvloop does, so the peer gets a clean `close_notify`
+  instead of a broken pipe or a reset.
+- Debug mode: `call_soon_threadsafe` from a thread with no Python frame
+  failed.
+- io_uring: a ring whose kernel dropped completions (out of memory) now
+  stops with a clear error instead of a bare `OSError(EBADR)`.
+- io_uring polls carry the right events on big-endian machines (sdist builds
+  only; the wheels are little-endian).
+- DESIGN.md and README.md: where ring memory is charged (by kernel version),
+  the receive buffers' size (4 MiB), when the kernel caps deferred work
+  (6.13), the signal check window, and iowait on idle loop threads.
+
 ## 1.0.0
 
 The first public release.
