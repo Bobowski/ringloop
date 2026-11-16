@@ -68,9 +68,11 @@ cdef extern from "Python.h":
         PyObject **ob_item
     ctypedef struct PyThreadState:
         pass
+    ctypedef struct PyFrameObject:
+        pass
     PyThreadState *PyThreadState_Get()
     # New reference, or NULL when the thread runs no Python code (no error set).
-    PyObject *PyThreadState_GetFrame(PyThreadState *tstate)
+    PyFrameObject *PyThreadState_GetFrame(PyThreadState *tstate)
     int PyContext_Enter(object ctx) except -1
     int PyContext_Exit(object ctx) except -1
     # The same two, on a borrowed pointer (no temporary reference).
@@ -2428,7 +2430,7 @@ def _extract_stack():
     # start_new_thread, a C library's thread). sys._getframe() cannot be
     # asked then: it raises ValueError up to 3.14, and on 3.15 it raises
     # SystemError or crashes the process.
-    cdef PyObject *f = PyThreadState_GetFrame(PyThreadState_Get())
+    cdef PyObject *f = <PyObject *>PyThreadState_GetFrame(PyThreadState_Get())
     if f == NULL:
         return traceback.StackSummary()
     frame = <object>f
