@@ -61,6 +61,7 @@ from asyncio.trsock import TransportSocket
 
 cdef extern from "<errno.h>" nogil:
     enum: ECANCELED
+    enum: EBADR
 
 cdef extern from "Python.h":
     ctypedef struct PyListObject:
@@ -215,17 +216,17 @@ DEF OP_WRITABLE = 5
 DEF OP_HUP = 6
 DEF OP_MASK = 7
 
-# Ring memory is charged to RLIMIT_MEMLOCK (8 MiB by default) unless the
-# process has CAP_IPC_LOCK, and a process may run one loop per thread: keep a
-# ring small. 1024 requests and 4096 completions take about 140 KiB. Neither
-# size limits a turn: a full submission queue is handed to the kernel part-way
-# through (see ll_get_sqe), and the kernel keeps completions that do not fit.
+# On some kernels (6.17, not 6.1-6.13) ring memory is charged to
+# RLIMIT_MEMLOCK (8 MiB by default) unless the process has CAP_IPC_LOCK, and
+# a process may run one loop per thread: keep a ring small. 1024 requests and
+# 4096 completions take about 140 KiB. Neither size limits a turn: a full
+# submission queue is handed to the kernel part-way through (see
+# ll_get_sqe), and the kernel keeps completions that do not fit.
 DEF RING_ENTRIES = 1024
-# Provided buffers (a power of two). Their ring is 16 bytes per buffer and
-# must fit in one page: kernels before 6.9 map only the first page of a ring
-# that the program allocated (they assume the pages are contiguous), and
-# would read buffer addresses from whatever lies behind it. 256 is what a
-# 4 KiB page holds.
+# Provided buffers (a power of two). 256 x 16 KiB is 4 MiB of address space
+# per loop, resident only as far as it is used; the kernel would take more
+# (it looks a multi-page buffer ring up page by page from 6.1 on), the
+# count is a memory choice. Their ring is 16 bytes per buffer.
 DEF RECV_BUFS = 256
 DEF RECV_BUF_SIZE = 16384
 DEF SCRATCH_SIZE = 262144    # epoll backend read buffer (one per loop)
@@ -1549,8 +1550,8 @@ cdef _warn_no_ring_memory():
         return
     warned_no_ring_memory = True
     logging.getLogger("ringloop").warning(
-        "io_uring_setup failed with ENOMEM (ring memory counts against RLIMIT_MEMLOCK "
-        "unless the process has CAP_IPC_LOCK); this loop uses epoll instead")
+        "io_uring_setup failed with ENOMEM (on many kernels ring memory counts against "
+        "RLIMIT_MEMLOCK unless the process has CAP_IPC_LOCK); this loop uses epoll instead")
 
 
 def _made_then_read(Transport t, waiter):
@@ -2019,8 +2020,10 @@ cdef class Core:
             self.watch[fd] = ent
             return
         old = ent[slot]
-        if old is None:
-            self._watch_sync(fd, True, True, True)  # both slots are now in use
+        # Also when a handle is replaced: the descriptor may have been closed
+        # under it (which drops its registration) and the number given to a
+        # new file since, which is then not registered at all.
+        self._watch_sync(fd, slot == 0 or ent[0] is not None, slot == 1 or ent[1] is not None, True)
         ent[slot] = handle
         if old is not None:
             old.cancel()
@@ -2035,7 +2038,11 @@ cdef class Core:
         old.cancel()
         if ent[0] is None and ent[1] is None:
             del self.watch[fd]
-        if not self.closed:
+        # A watch on a number a transport or listener holds can only be stale
+        # (_watch_add refuses those numbers): the descriptor it was for was
+        # closed under it and the number reused. The registration is the
+        # transport's; leave it alone.
+        if not self.closed and fd not in self.fds:
             self._watch_sync(fd, ent[0] is not None, ent[1] is not None, True)
         return True
 
@@ -2218,6 +2225,14 @@ cdef class Core:
         else:
             rc = ll_submit_and_wait(&self.ring, 0, -1)
         if rc < 0:
+            if rc == -EBADR:
+                # The kernel had no memory to keep completions the queue
+                # had no room for, and dropped them: requests whose end the
+                # loop will never see (a send never finishes, a socket is
+                # never released). Nothing can recover them.
+                raise RuntimeError(
+                    "io_uring dropped completions (the kernel ran out of memory); "
+                    "this loop cannot continue: close it and create a new one")
             raise os_error(-rc)
         if rc > 0:
             # A signal ended the wait: let Python run its handler (Ctrl-C
@@ -2402,8 +2417,15 @@ def format_callback(callback, args):
 def _extract_stack():
     """The Python stack of the caller, innermost frame last, without source
     lines (they are looked up only if the traceback is printed)."""
+    try:
+        frame = sys._getframe(0)
+    except ValueError:
+        # No Python frame at all: called from a thread that is not running
+        # Python code (call_soon_threadsafe passed to start_new_thread, a C
+        # library's thread). This file is Cython and pushes none of its own.
+        return traceback.StackSummary()
     stack = traceback.StackSummary.extract(
-        traceback.walk_stack(sys._getframe(0)), limit=10, lookup_lines=False)
+        traceback.walk_stack(frame), limit=10, lookup_lines=False)
     stack.reverse()
     return stack
 
@@ -3064,7 +3086,12 @@ cdef class LoopCore:
             # only run when asked from here (this is not bytecode), and one of
             # them may raise (Ctrl-C) or schedule a callback.
             PyErr_CheckSignals()
-        if PyList_GET_SIZE(self.ready) or ll_load_int(&self._stopping):
+        if (PyList_GET_SIZE(self.ready) or ll_load_int(&self._stopping)
+                or PyList_GET_SIZE(self._core.dirty)):
+            # dirty: under epoll the flush above can empty a buffer and call
+            # resume_writing(), and what that writes waits for the next turn's
+            # flush; there is nothing to wake the loop for it. (Under io_uring
+            # the flush only queues sends, so dirty is empty here.)
             timeout = 0
         elif PyList_GET_SIZE(timers):
             timeout = timers_top(timers)._when - monotonic()

@@ -184,10 +184,13 @@ a pre-fork server) share the connections evenly on both backends. After
 
 ## Limits
 
-- Ring memory counts against `RLIMIT_MEMLOCK` unless the process has
-  `CAP_IPC_LOCK`. A ring takes about 140 KiB, so the usual 8 MiB limit holds
-  about 50 loops. A loop that cannot get a ring logs one warning and uses
-  epoll.
+- On some kernels (seen on 6.17) ring memory counts against
+  `RLIMIT_MEMLOCK` unless the process has `CAP_IPC_LOCK`. A ring takes about
+  140 KiB, so the usual 8 MiB limit holds about 50 loops. A loop that cannot
+  get a ring logs one warning and uses epoll.
+- An idle loop thread can show as I/O wait in `top` on Linux 6.5 and newer:
+  the kernel counts a thread waiting in io_uring with requests outstanding
+  as waiting for I/O. The CPU is idle.
 - A loop creates its ring when it opens its first socket. A program that
   only runs timers, tasks or subprocesses never creates one.
 

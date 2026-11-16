@@ -428,6 +428,20 @@ class SSLTransport(asyncio.Transport):
         self._do_shutdown()
 
     def _do_shutdown(self):
+        # What the peer sent before its close_notify is read away first (the
+        # application has closed; nobody wants it): unwrap() fails on
+        # application data (APPLICATION_DATA_AFTER_CLOSE_NOTIFY), and closing
+        # the socket with input unread makes the kernel send a reset, which
+        # can destroy what the peer has not read of our last bytes.
+        try:
+            while self._sslobj.read(READ_SIZE):
+                pass
+        except _WANT + (ssl.SSLZeroReturnError,):
+            pass  # nothing more for now / the peer's close_notify was read
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except BaseException:
+            pass  # unwrap() below meets the same error
         try:
             self._sslobj.unwrap()
         except _WANT:

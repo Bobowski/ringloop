@@ -55,9 +55,9 @@ asyncio classes directly.
   `SINGLE_ISSUER` and `DEFER_TASKRUN`, 1024 submission and 4096 completion
   entries. Linux 6.1 is the minimum because `DEFER_TASKRUN` is: an older
   kernel fails ring setup and gets epoll. Receives are one multishot `RECV` per
-  connection drawing from a shared ring of 256 x 16 KiB buffers (256:
-  the buffer ring then fits in one page; kernels before 6.9 map only the
-  first page of a ring the program allocated). Sends are
+  connection drawing from a shared ring of 256 x 16 KiB buffers (4 MiB of
+  address space, resident only as far as it is used; the count is a memory
+  choice, not a kernel limit). Sends are
   `SEND` with `MSG_WAITALL` from a buffer the transport owns until the
   completion arrives. Accept is one request per connection (see "Accept is
   inline").
@@ -90,13 +90,15 @@ socket (or is asked for `loop.backend`). Until then the loop waits in
 `epoll_wait`: callbacks, timers, `add_reader` / `add_writer` and the wake-up
 eventfd need nothing else. A program that only runs tasks, timers or
 subprocesses never creates a ring, and a test suite that makes a loop per
-test does not create and destroy a ring (and its 8 MiB of receive buffers)
+test does not create and destroy a ring (and its 4 MiB of receive buffers)
 per test.
 
-Ring memory counts against `RLIMIT_MEMLOCK` (8 MiB by default) unless the
-process has `CAP_IPC_LOCK`, and the kernel gives it back some time after the
-ring is closed. That is why the ring is small: about 140 KiB, so some 50
-loops fit in the default limit (one loop per thread on a large machine). The
+Where ring memory is charged depends on the kernel version. Linux 6.1 to
+6.13 charge it to the memory cgroup; some later kernels (seen on 6.17) count
+it against `RLIMIT_MEMLOCK` (8 MiB by default) unless the process has
+`CAP_IPC_LOCK`, and give it back some time after the ring is closed. That is
+why the ring is small: about 140 KiB, so some 50 loops fit in the default
+limit (one loop per thread on a large machine). The
 sizes do not limit a turn (see "The submission queue cannot overflow"; the
 kernel keeps completions that do not fit and hands them over on the next
 call). When `io_uring_setup` fails with `ENOMEM` the loop logs one warning
@@ -198,7 +200,11 @@ thread runs it, the thread calling into it. That thread is the loop's
 - **Signals are checked before sleeping.** The loop is not bytecode, so
   Python-level signal handlers run only when it asks: before each wait and
   whenever a wait returns `EINTR`. That is what makes Ctrl-C (and
-  `asyncio.Runner`'s SIGINT handling) work on an idle loop.
+  `asyncio.Runner`'s SIGINT handling) work on an idle loop. A signal that
+  lands between that check and the start of the wait causes no `EINTR`; its
+  handler then runs at the next wake-up (as under asyncio, whose window is
+  wider). `add_signal_handler` handlers are not affected: they go through a
+  wake-up socket.
 - **Scheduling is two lists and a native heap.** `call_soon` appends to a
   list; a turn swaps it for an empty one and runs the batch, so callbacks
   scheduled by callbacks wait for the next turn. Timers are a binary heap of
@@ -285,11 +291,17 @@ thread runs it, the thread calling into it. That thread is the loop's
   them to the child's own loop).
 - A loop cannot move to another thread while a send is in flight (see
   above).
-- On kernels before 6.10 a turn in which more than 256 connections have
+- On kernels before 6.13 a turn in which more than 256 connections have
   input runs out of receive buffers. The recvs that got none end with
-  `ENOBUFS` and are armed again: correct, with some extra work. (Newer
-  kernels hand out at most 20 completions per call, so it does not happen
-  there.) A kernel-allocated buffer ring (6.4) could be larger.
+  `ENOBUFS` and are armed again: correct, with some extra work. (From 6.13
+  the kernel runs at most 20 items of deferred work per call, which makes
+  it rare there.) More buffers, or incremental buffer consumption (6.12),
+  would avoid it at a memory cost.
+- From about Linux 6.5, a thread waiting in `io_uring_enter` while it has
+  requests outstanding counts as I/O wait, and a loop always has some (its
+  recvs and accepts). An idle loop thread therefore shows up to 100% iowait
+  in `top` and in monitoring; the CPU is idle. Newer kernels have
+  `IORING_ENTER_NO_IOWAIT` to turn this off; the loop does not use it yet.
 - Ubuntu's 6.8 kernels (seen: 6.8.0-1070-azure, GitHub's `ubuntu-22.04`
   runners) carry a backport of the buffer ring registration in which the
   test of the reserved bytes is inverted (`!memchr_inv(reg.resv, ...)`): the

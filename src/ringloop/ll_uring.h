@@ -89,8 +89,7 @@ static void ll_ring_close(ll_ring *r) {
     r->fd = -1;
 }
 
-/* Returns 0, or -errno. buf_count must be a power of two, and small enough
- * for the buffer ring (16 bytes each) to fit in one page: see RECV_BUFS.
+/* Returns 0, or -errno. buf_count must be a power of two (see RECV_BUFS).
  *
  * DEFER_TASKRUN (Linux 6.1) is required: completions then happen only
  * inside this thread's own io_uring_enter, which the loop relies on when it
@@ -359,6 +358,11 @@ static inline struct ll_sqe *ll_prep_cancel_everything(ll_ring *r, uint64_t ud) 
 }
 static inline struct ll_sqe *ll_prep_poll(ll_ring *r, int fd, unsigned mask, uint64_t ud) {
     struct ll_sqe *s = ll_get_sqe(r);
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    /* The kernel swaps the half-words of poll32_events on big-endian
+     * machines (swahw32), as liburing's io_uring_prep_poll_add does. */
+    mask = (mask << 16) | (mask >> 16);
+#endif
     s->opcode = LL_OP_POLL_ADD; s->fd = fd; s->op_flags = mask; s->user_data = ud;
     return s;
 }
